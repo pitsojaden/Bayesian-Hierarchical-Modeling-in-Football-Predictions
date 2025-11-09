@@ -1,0 +1,456 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Manchester City Analytics</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;800&display=swap" rel="stylesheet">
+<style>
+    :root{
+        --bg:#f3f8fb;
+        --card:#ffffff;
+        --accent:#1e5a8e;
+        --accent-2:#5da9dd;
+        --muted:#9aa8b3;
+        --success:#51cf66;
+        --warning:#ffd93d;
+        --danger:#ff6b6b;
+        --border: #e4eef6;
+        --radius:14px;
+    }
+    *{box-sizing:border-box;font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,"Helvetica Neue",Arial;}
+    body{
+        margin:0;
+        background:linear-gradient(180deg,#eaf6ff 0%, #f7fbfd 40%);
+        color:#073045;
+        -webkit-font-smoothing:antialiased;
+    }
+
+    header.app-header{
+        padding:36px 18px 22px;
+        text-align:center;
+        background:linear-gradient(180deg,#eaf6ff 0,#f7fbfd 60%);
+        border-bottom:1px solid var(--border);
+    }
+    .logo-wrap{display:flex;align-items:center;gap:14px;justify-content:center;margin-bottom:6px;}
+    .club-badge{
+        width:68px;height:68px;border-radius:50%;background:linear-gradient(180deg,#fff,#e6f1fb);
+        display:flex;align-items:center;justify-content:center;border:2px solid var(--border);
+        box-shadow: 0 4px 12px rgba(14,56,84,0.06);
+    }
+    h1.title{margin:0;font-size:28px;color:var(--accent);font-weight:700;}
+    .subtitle{margin:6px 0 0;color:var(--accent-2);font-weight:600;font-size:13px;}
+
+    .container{max-width:980px;margin:28px auto;padding:0 18px;}
+
+    .card{
+        background:var(--card);
+        border-radius:var(--radius);
+        border:1px solid var(--border);
+        padding:18px;
+        box-shadow: 0 8px 20px rgba(20,60,100,0.04);
+    }
+
+    /* Dashboard layout */
+    .reports-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;}
+    .section-title{display:flex;gap:10px;align-items:center;font-weight:700;color:var(--accent);font-size:18px;}
+    .last-updated{color:var(--muted);font-size:13px;}
+
+    .match-list{margin-top:12px;display:grid;gap:14px;}
+    .match-tile{
+        display:flex;align-items:center;justify-content:space-between;padding:14px;border-radius:12px;border:1px solid #ecf4fb;background:linear-gradient(180deg,#ffffff,#fbfeff);
+        transition:transform .14s ease, box-shadow .14s ease;
+    }
+    .match-tile:hover{transform:translateY(-4px);box-shadow:0 10px 30px rgba(14,56,84,0.06);cursor:pointer;}
+    .left {display:flex;gap:12px;align-items:center;}
+    .teams {font-weight:700;color:#073045;font-size:15px;display:flex;gap:8px;align-items:center;}
+    .team-name{display:flex;align-items:center;gap:8px;}
+    .match-meta{color:var(--muted);font-size:13px;margin-top:6px;}
+    .right {display:flex;flex-direction:column;align-items:flex-end;gap:8px;}
+
+    .status-row{display:flex;gap:10px;align-items:center;font-size:13px;color:var(--muted);}
+    .status-dot{width:8px;height:8px;border-radius:50%;background:var(--accent-2);display:inline-block;}
+    .small-link{color:var(--accent);font-weight:600;font-size:13px;border:none;background:none;cursor:pointer;}
+
+    .progress-wrap{width:220px;}
+    .progress{height:8px;background:#e9f4fb;border-radius:999px;overflow:hidden;margin-top:6px;}
+    .progress-fill{height:100%;background:linear-gradient(90deg,var(--accent-2),var(--accent));border-radius:999px;width:40%;}
+
+    .predicted-score{color:#0b3a50;font-weight:600;font-size:13px;margin-top:8px;}
+
+    /* Simulation view */
+    .simulation-wrap{margin-top:18px;display:none;animation:fadeIn .36s ease both;}
+    @keyframes fadeIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+
+    .sim-header{display:flex;flex-direction:column;align-items:center;padding:28px 18px;border-radius:12px;background:linear-gradient(180deg,#ffffff,#f6fbff);box-shadow:0 10px 30px rgba(14,56,84,0.04);margin-bottom:18px;text-align:center}
+    .sim-score{display:flex;align-items:center;gap:28px;justify-content:center;margin-top:8px}
+    .sim-score .big{font-weight:800;color:var(--accent);font-size:44px}
+    .sim-team{display:flex;flex-direction:column;align-items:center;gap:8px;font-weight:700;color:#073045}
+    .confidence-pill{background:#f0fbff;padding:6px 10px;border-radius:999px;border:1px solid var(--border);font-weight:600;color:var(--accent)}
+
+    /* events */
+    .events-section{margin-top:12px;}
+    .events-title{font-weight:700;color:var(--accent);margin-bottom:12px}
+    .event-card{display:flex;justify-content:space-between;gap:18px;align-items:flex-start;padding:14px;border-radius:10px;border:1px solid #eef6fb;background:linear-gradient(180deg,#ffffff,#fbfdff);margin-bottom:12px}
+    .event-left{display:flex;gap:12px;align-items:flex-start;flex:1}
+    .event-icon{width:44px;height:44px;border-radius:8px;background:#fbfcff;border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:18px}
+    .event-body{flex:1}
+    .event-title{font-weight:700;color:#073045}
+    .event-time{font-size:12px;color:var(--muted);margin-top:6px}
+    .event-desc{margin-top:8px;color:#1f4a5f}
+    .recommendation{margin-top:10px;padding:10px;border-radius:8px;background:#fff8f8;border:1px solid rgba(255,107,107,0.12);color:#7a1f1f;font-weight:600}
+    .prob-wrap{width:180px;text-align:right}
+    .prob-bar{height:9px;background:#f1f6fa;border-radius:999px;overflow:hidden;margin-top:10px}
+    .prob-fill{height:100%;border-radius:999px;width:50%}
+    .prob-range{color:var(--muted);font-size:12px;margin-top:6px}
+
+    /* small responsive */
+    @media (max-width:820px){
+        .progress-wrap{width:160px}
+        .sim-score .big{font-size:34px}
+    }
+</style>
+</head>
+<body>
+
+<header class="app-header">
+    <div class="logo-wrap">
+        <div class="club-badge" aria-hidden="true">
+            <!-- simple SVG placeholder for logo -->
+            <svg width="44" height="44" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+                <defs>
+                    <linearGradient id="g" x1="0" x2="1">
+                        <stop offset="0" stop-color="#dff3ff"/><stop offset="1" stop-color="#ffffff"/>
+                    </linearGradient>
+                </defs>
+                <circle cx="50" cy="50" r="44" fill="url(#g)" stroke="#cfeaf9" stroke-width="2"/>
+                <text x="50%" y="55%" text-anchor="middle" font-size="36" fill="#1e5a8e" font-weight="700" font-family="Inter, sans-serif">MC</text>
+            </svg>
+        </div>
+    </div>
+    <h1 class="title">Manchester City Analytics</h1>
+    <div class="subtitle">Bayesian Match Simulation Platform</div>
+</header>
+
+<main class="container">
+    <!-- Dashboard Card -->
+    <section id="dashboardCard" class="card">
+        <div class="reports-header">
+            <div class="section-title">▶ Match Reports</div>
+            <div class="last-updated" id="lastUpdated">Last updated: --:--:--</div>
+        </div>
+
+        <div class="match-list" id="matchList">
+            <!-- match tiles inserted here -->
+        </div>
+    </section>
+
+    <!-- Simulation View -->
+    <section id="simulationCard" class="simulation-wrap card" aria-hidden="true">
+        <div class="sim-header">
+            <div style="color:var(--muted);font-weight:600;">Match Simulation Analysis</div>
+            <div style="font-weight:800;font-size:20px;margin-top:6px;color:var(--accent);">Bayesian Model Predictions • <span id="simBadge">Simulation 1</span></div>
+            <div class="sim-score">
+                <div class="sim-team">
+                    <div id="homeBadgeSmall" style="display:flex;align-items:center;gap:10px;">
+                        <div style="width:52px;height:52px;border-radius:50%;background:#eef8ff;border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-weight:700;color:var(--accent)">MC</div>
+                        <div style="font-weight:700;color:#073045" id="homeName">Man City</div>
+                    </div>
+                </div>
+
+                <div style="text-align:center;">
+                    <div class="big sim-score-num" id="scoreBig">2 - 1</div>
+                    <div style="font-size:13px;color:var(--muted);margin-top:6px;">Final Score Prediction</div>
+                    <div style="margin-top:8px;" class="confidence-pill" id="confidencePill">84.0% Confidence</div>
+                </div>
+
+                <div class="sim-team">
+                    <div id="awayBadgeSmall" style="display:flex;align-items:center;gap:10px;">
+                        <div style="width:52px;height:52px;border-radius:50%;background:#fff6f6;border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-weight:700;color:#b33">ARS</div>
+                        <div style="font-weight:700;color:#073045" id="awayName">Arsenal</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="events-section">
+            <div class="events-title">🕐 Predicted Match Events</div>
+            <div id="eventsList">
+                <!-- event cards inserted here -->
+            </div>
+        </div>
+    </section>
+</main>
+
+<script>
+/* ---------- Sample data (matches + events) ---------- */
+const matches = [
+    {
+        id:1,
+        home:"Man City",
+        away:"Arsenal",
+        predicted_score:"2 - 1",
+        confidence:84,
+        status:"Results Ready",
+        time_ago:"2 hours ago",
+        events:[
+            {
+                player:"Erling Haaland",
+                time:"65' minute",
+                type:"injury",
+                icon:"⚠️",
+                description:"Muscle strain injury predicted with moderate certainty",
+                warning:"Consider resting Erling Haaland to prevent injury and preserve fitness for upcoming fixtures.",
+                probability:[0.13,0.45]
+            },
+            {
+                player:"7 Fouls",
+                time:"",
+                type:"fouls",
+                icon:"🟨",
+                description:"High fouling frequency expected, particularly in midfield",
+                probability:[0.30,0.89]
+            },
+            {
+                player:"Kevin De Bruyne",
+                time:"23' minute",
+                type:"goal",
+                icon:"⚽",
+                description:"Goal scoring opportunity with high probability",
+                probability:[0.65,0.82]
+            }
+        ]
+    },
+    {
+        id:2,
+        home:"Liverpool",
+        away:"Man City",
+        predicted_score:"1 - 3",
+        confidence:91,
+        status:"Results Ready",
+        time_ago:"4 hours ago",
+        events:[]
+    },
+    {
+        id:3,
+        home:"Man City",
+        away:"Tottenham",
+        predicted_score:"4 - 1",
+        confidence:76,
+        status:"Results Ready",
+        time_ago:"6 hours ago",
+        events:[]
+    }
+];
+
+function createBadgeInitials(text, bg="#eef8ff", fg="#1e5a8e"){
+    const initials = text.split(' ').map(s=>s[0]).slice(0,2).join('').toUpperCase();
+    // small inline SVG string
+    return `
+      <svg width="48" height="48" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+        <circle cx="50" cy="50" r="46" fill="${bg}" stroke="#e6f1fb" stroke-width="2"/>
+        <text x="50%" y="58%" text-anchor="middle" font-size="36" fill="${fg}" font-weight="700" font-family="Inter, sans-serif">${initials}</text>
+      </svg>
+    `;
+}
+
+/* ---------- Render dashboard ---------- */
+const matchListEl = document.getElementById('matchList');
+const lastUpdatedEl = document.getElementById('lastUpdated');
+
+function formatTimeNow(){
+    const d = new Date();
+    return d.toLocaleTimeString([], {hour:'2-digit',minute:'2-digit',second:'2-digit'});
+}
+lastUpdatedEl.textContent = "Last updated: " + formatTimeNow();
+
+function renderMatches(){
+    matchListEl.innerHTML = '';
+    matches.forEach(m=>{
+        const tile = document.createElement('div');
+        tile.className = 'match-tile';
+
+        // left
+        const left = document.createElement('div'); left.className='left';
+        const badgeWrap = document.createElement('div');
+        badgeWrap.innerHTML = createBadgeInitials(m.home, '#eef8ff','#1e5a8e');
+        badgeWrap.style.display='flex'; badgeWrap.style.alignItems='center';
+        const info = document.createElement('div');
+        const teams = document.createElement('div'); teams.className='teams';
+        teams.innerHTML = `<span class="team-name"><strong>${m.home}</strong></span> <span style="color:#3b6b91;font-weight:600">vs</span> <span class="team-name"><strong style="color:#073045">${m.away}</strong></span>`;
+        const meta = document.createElement('div'); meta.className='match-meta';
+        meta.textContent = `Predicted Score: ${m.predicted_score}`;
+
+        info.appendChild(teams);
+        info.appendChild(meta);
+
+        left.appendChild(badgeWrap);
+        left.appendChild(info);
+
+        // right
+        const right = document.createElement('div'); right.className='right';
+        const status = document.createElement('div'); status.className='status-row';
+        status.innerHTML = `<div style="font-weight:700;color:#3b617e">Simulation ${m.id} - ${m.status}</div>`;
+        const timeLine = document.createElement('div'); timeLine.className='status-row';
+        timeLine.innerHTML = `<div style="color:var(--muted);font-size:13px">${m.time_ago}</div>`;
+        const progressWrap = document.createElement('div'); progressWrap.className='progress-wrap';
+        progressWrap.innerHTML = `<div style="font-size:13px;color:var(--muted);"> </div>
+            <div class="progress"><div class="progress-fill" style="width:${m.confidence}%"></div></div>
+            <div style="font-size:13px;color:var(--accent);font-weight:700;margin-top:8px;text-align:right">${m.confidence}% confidence</div>`;
+
+        const btn = document.createElement('button');
+        btn.className='small-link';
+        btn.textContent='Ready →';
+        btn.onclick = (e)=>{
+            e.stopPropagation();
+            openSimulation(m.id);
+        };
+
+        right.appendChild(status);
+        right.appendChild(timeLine);
+        right.appendChild(progressWrap);
+        right.appendChild(btn);
+
+        tile.appendChild(left);
+        tile.appendChild(right);
+
+        tile.onclick = ()=>{
+            openSimulation(m.id);
+        };
+
+        matchListEl.appendChild(tile);
+    });
+}
+
+renderMatches();
+
+/* ---------- Simulation rendering ---------- */
+const simulationCard = document.getElementById('simulationCard');
+const dashboardCard = document.getElementById('dashboardCard');
+const simBadge = document.getElementById('simBadge');
+const scoreBig = document.getElementById('scoreBig');
+const homeNameEl = document.getElementById('homeName');
+const awayNameEl = document.getElementById('awayName');
+const homeBadgeSmall = document.getElementById('homeBadgeSmall');
+const awayBadgeSmall = document.getElementById('awayBadgeSmall');
+const confidencePill = document.getElementById('confidencePill');
+const eventsList = document.getElementById('eventsList');
+
+function openSimulation(id){
+    const match = matches.find(x=>x.id===id);
+    if(!match) return;
+    // fill header
+    simBadge.textContent = `Simulation ${match.id}`;
+    scoreBig.textContent = match.predicted_score;
+    homeNameEl.textContent = match.home;
+    awayNameEl.textContent = match.away;
+    homeBadgeSmall.querySelector('div')?.remove?.(); // remove placeholder internal divs if any
+
+    // generate small badges
+    homeBadgeSmall.innerHTML = `<div style="width:52px;height:52px;border-radius:50%;background:#eef8ff;border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-weight:700;color:var(--accent)">${match.home.split(' ').map(s=>s[0]).slice(0,2).join('').toUpperCase()}</div><div style="font-weight:700;color:#073045;margin-left:8px">${match.home}</div>`;
+    awayBadgeSmall.innerHTML = `<div style="width:52px;height:52px;border-radius:50%;background:#fff6f6;border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-weight:700;color:#b33">${match.away.split(' ').map(s=>s[0]).slice(0,2).join('').toUpperCase()}</div><div style="font-weight:700;color:#073045;margin-left:8px">${match.away}</div>`;
+
+    confidencePill.textContent = `${match.confidence.toFixed(1)}% Confidence`;
+
+    // populate events
+    eventsList.innerHTML = '';
+    if(match.events && match.events.length){
+        match.events.forEach(ev=>{
+            const card = document.createElement('div'); card.className='event-card';
+            const left = document.createElement('div'); left.className='event-left';
+            const icon = document.createElement('div'); icon.className='event-icon';
+            icon.textContent = ev.icon || 'ℹ️';
+            const body = document.createElement('div'); body.className='event-body';
+            const title = document.createElement('div'); title.className='event-title';
+            title.textContent = `${ev.player}`;
+            const time = document.createElement('div'); time.className='event-time';
+            time.textContent = ev.time || '';
+            const desc = document.createElement('div'); desc.className='event-desc';
+            desc.textContent = ev.description || '';
+
+            body.appendChild(title);
+            if(ev.time) body.appendChild(time);
+            body.appendChild(desc);
+
+            if(ev.warning){
+                const rec = document.createElement('div'); rec.className='recommendation';
+                rec.textContent = `⚠️ Recommendation: ${ev.warning}`;
+                body.appendChild(rec);
+            }
+
+            left.appendChild(icon);
+            left.appendChild(body);
+
+            const right = document.createElement('div'); right.className='prob-wrap';
+            const avgProb = ((ev.probability[0] + ev.probability[1]) / 2);
+            const widthPercent = Math.max(3, Math.min(98, avgProb*100));
+            const probBar = document.createElement('div'); probBar.className='prob-bar';
+            const probFill = document.createElement('div'); probFill.className='prob-fill';
+            // color by type
+            let color = 'linear-gradient(90deg,#51cf66,#2e9b4d)';
+            if(ev.type === 'injury') color = 'linear-gradient(90deg,#ff9b9b,#ff6b6b)';
+            if(ev.type === 'fouls') color = 'linear-gradient(90deg,#ffdf7a,#ffd93d)';
+            probFill.style.width = widthPercent + '%';
+            probFill.style.background = color;
+
+            probBar.appendChild(probFill);
+            const range = document.createElement('div'); range.className='prob-range';
+            range.textContent = `[${ev.probability[0].toFixed(2)}, ${ev.probability[1].toFixed(2)}]`;
+
+            right.appendChild(probBar);
+            right.appendChild(range);
+
+            card.appendChild(left);
+            card.appendChild(right);
+            eventsList.appendChild(card);
+        });
+    } else {
+        const empty = document.createElement('div');
+        empty.className='card';
+        empty.style.marginTop='8px';
+        empty.innerHTML = `<div style="color:var(--muted);font-weight:600">No predicted events for this simulation.</div>`;
+        eventsList.appendChild(empty);
+    }
+
+    // show simulation card, hide dashboard
+    dashboardCard.style.display = 'none';
+    simulationCard.style.display = 'block';
+    simulationCard.setAttribute('aria-hidden','false');
+    // scroll to top of page for nicer UX
+    window.scrollTo({top:0,behavior:'smooth'});
+}
+
+function closeSimulation(){
+    simulationCard.style.display='none';
+    dashboardCard.style.display='block';
+    simulationCard.setAttribute('aria-hidden','true');
+}
+
+/* Add a small clickable back UI (close simulation when clicking outside or pressing back) */
+document.addEventListener('click', function(e){
+    if(e.target && e.target.classList && e.target.classList.contains('small-link') && e.target.textContent.trim() === '← Back to Dashboard'){
+        closeSimulation();
+    }
+});
+
+/* Add Back button appended to sim header for UX */
+(function addBackButton(){
+    const btn = document.createElement('button');
+    btn.textContent='← Back to Dashboard';
+    btn.style.position='absolute';
+    btn.style.left='18px';
+    btn.style.top='18px';
+    btn.style.background='#fff';
+    btn.style.border='1px solid #e6eef6';
+    btn.style.padding='8px 12px';
+    btn.style.borderRadius='8px';
+    btn.style.cursor='pointer';
+    btn.style.fontWeight='700';
+    btn.addEventListener('click', closeSimulation);
+    document.querySelector('.sim-header').style.position='relative';
+    document.querySelector('.sim-header').appendChild(btn);
+})();
+
+</script>
+</body>
+</html>
