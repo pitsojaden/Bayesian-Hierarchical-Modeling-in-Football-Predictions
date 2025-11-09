@@ -1,0 +1,376 @@
+
+import React, { useState } from 'react';
+import { Play, TrendingUp, Users, Clock, AlertTriangle, Target, Activity } from 'lucide-react';
+
+const FootballDashboard = () => {
+  const [selectedSimulation, setSelectedSimulation] = useState(null);
+
+  // FIXED DATA - ALL MAN CITY MATCHES
+  const simulations = [
+    {
+      id: 1,
+      status: 'ready',
+      homeTeam: 'Man City',
+      awayTeam: 'Arsenal',
+      homeScore: 2,
+      awayScore: 1,
+      confidence: 0.84,
+      timestamp: '2 hours ago'
+    },
+    {
+      id: 2,
+      status: 'ready',
+      homeTeam: 'Liverpool',
+      awayTeam: 'Man City',
+      homeScore: 1,
+      awayScore: 3,
+      confidence: 0.91,
+      timestamp: '4 hours ago'
+    },
+    {
+      id: 3,
+      status: 'ready',
+      homeTeam: 'Man City',
+      awayTeam: 'Tottenham',
+      homeScore: 4,
+      awayScore: 1,
+      confidence: 0.76,
+      timestamp: '6 hours ago'
+    }
+  ];
+
+  const matchEvents = [
+    {
+      type: 'injury',
+      player: 'Erling Haaland',
+      minute: 65,
+      confidence: [0.13, 0.45],
+      severity: 'high',
+      description: 'Muscle strain injury predicted with moderate certainty'
+    },
+    {
+      type: 'fouls',
+      count: 7,
+      confidence: [0.3, 0.89],
+      severity: 'medium',
+      description: 'High fouling frequency expected, particularly in midfield'
+    },
+    {
+      type: 'goal',
+      player: 'Kevin De Bruyne',
+      minute: 23,
+      confidence: [0.65, 0.82],
+      severity: 'low',
+      description: 'Strong likelihood of early goal from set piece'
+    },
+    {
+      type: 'card',
+      player: 'Granit Xhaka',
+      minute: 78,
+      confidence: [0.41, 0.73],
+      severity: 'medium',
+      description: 'Yellow card probability due to tactical fouling pattern'
+    },
+    {
+      type: 'substitution',
+      player: 'Jack Grealish',
+      minute: 58,
+      confidence: [0.55, 0.91],
+      severity: 'low',
+      description: 'Tactical substitution likely due to match state'
+    }
+  ];
+
+  const TeamLogo = ({ team, size = "large" }) => {
+    const logos = {
+      'Man City': (
+        <svg viewBox="0 0 100 100" className={size === "large" ? "w-16 h-16" : "w-8 h-8"}>
+          <circle cx="50" cy="50" r="45" fill="#6CABDD" stroke="#ffffff" strokeWidth="2"/>
+          <circle cx="50" cy="50" r="35" fill="#ffffff"/>
+          <path d="M35 30 L65 30 L60 45 L40 45 Z" fill="#6CABDD"/>
+          <circle cx="50" cy="55" r="8" fill="#6CABDD"/>
+          <path d="M42 60 L58 60 L55 70 L45 70 Z" fill="#6CABDD"/>
+        </svg>
+      ),
+      'Arsenal': (
+        <svg viewBox="0 0 100 100" className={size === "large" ? "w-16 h-16" : "w-8 h-8"}>
+          <path d="M50 10 L30 90 L70 90 Z" fill="#DC2626" stroke="#FFD700" strokeWidth="2"/>
+          <circle cx="50" cy="40" r="15" fill="#FFD700"/>
+          <path d="M40 35 L60 35 L55 50 L45 50 Z" fill="#DC2626"/>
+        </svg>
+      ),
+      'Liverpool': (
+        <svg viewBox="0 0 100 100" className={size === "large" ? "w-16 h-16" : "w-8 h-8"}>
+          <circle cx="50" cy="50" r="45" fill="#C8102E"/>
+          <path d="M25 35 Q50 20 75 35 Q50 50 25 35" fill="#FFD700"/>
+          <circle cx="35" cy="45" r="3" fill="#FFD700"/>
+          <circle cx="65" cy="45" r="3" fill="#FFD700"/>
+          <path d="M30 65 Q50 75 70 65" stroke="#FFD700" strokeWidth="3" fill="none"/>
+        </svg>
+      ),
+      'Tottenham': (
+        <svg viewBox="0 0 100 100" className={size === "large" ? "w-16 h-16" : "w-8 h-8"}>
+          <circle cx="50" cy="50" r="45" fill="#132257"/>
+          <path d="M40 20 L50 35 L60 20 L55 45 L45 45 Z" fill="#ffffff"/>
+          <circle cx="50" cy="60" r="12" fill="#ffffff"/>
+          <path d="M35 75 L65 75" stroke="#ffffff" strokeWidth="4"/>
+        </svg>
+      )
+    };
+
+    return logos[team] || (
+      <div className={`bg-gray-500 ${size === "large" ? "w-16 h-16" : "w-8 h-8"} rounded-full flex items-center justify-center text-white font-bold text-sm shadow-lg`}>
+        {team.split(' ').map(word => word[0]).join('')}
+      </div>
+    );
+  };
+
+  const ConfidenceBar = ({ confidence, severity }) => {
+    const width = Math.abs(confidence[1] - confidence[0]) * 100;
+    const severityColors = {
+      high: 'bg-red-500',
+      medium: 'bg-yellow-500', 
+      low: 'bg-sky-500'
+    };
+
+    return (
+      <div className="flex items-center space-x-2">
+        <div className="w-32 bg-gray-200 rounded-full h-2">
+          <div 
+            className={`${severityColors[severity]} h-2 rounded-full transition-all duration-500`}
+            style={{ width: `${width}%` }}
+          />
+        </div>
+        <span className="text-xs text-gray-600">
+          [{confidence[0].toFixed(2)}, {confidence[1].toFixed(2)}]
+        </span>
+      </div>
+    );
+  };
+
+  const EventIcon = ({ type }) => {
+    const icons = {
+      injury: <AlertTriangle className="w-5 h-5 text-red-500" />,
+      fouls: <Users className="w-5 h-5 text-yellow-500" />,
+      goal: <Target className="w-5 h-5 text-sky-500" />,
+      card: <Activity className="w-5 h-5 text-yellow-600" />,
+      substitution: <TrendingUp className="w-5 h-5 text-sky-500" />
+    };
+    return icons[type] || <Activity className="w-5 h-5 text-gray-500" />;
+  };
+
+  if (selectedSimulation) {
+    const simulation = simulations.find(s => s.id === selectedSimulation);
+    
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-sky-50 to-sky-100">
+        <div className="container mx-auto px-6 py-8">
+          {/* Header */}
+          <div className="mb-8">
+            <button 
+              onClick={() => setSelectedSimulation(null)}
+              className="mb-4 text-sky-600 hover:text-sky-800 font-medium flex items-center space-x-2"
+            >
+              <span>← Back to Dashboard</span>
+            </button>
+            
+            <div className="bg-white rounded-2xl shadow-xl p-8 border border-sky-100">
+              <div className="text-center mb-8">
+                <h1 className="text-3xl font-bold text-gray-800 mb-2">Match Simulation Analysis</h1>
+                <p className="text-sky-600">Bayesian Model Predictions • Simulation {simulation.id}</p>
+              </div>
+
+              {/* Match Header */}
+              <div className="flex items-center justify-center space-x-8 mb-8">
+                <div className="text-center">
+                  <TeamLogo team={simulation.homeTeam} />
+                  <h3 className="mt-3 font-bold text-xl text-gray-800">{simulation.homeTeam}</h3>
+                </div>
+                
+                <div className="text-center px-8">
+                  <div className="text-5xl font-bold text-sky-700 mb-2">
+                    {simulation.homeScore} - {simulation.awayScore}
+                  </div>
+                  <div className="text-sm text-gray-500">Final Score Prediction</div>
+                  <div className="mt-2 px-4 py-1 bg-sky-100 text-sky-800 rounded-full text-sm">
+                    {(simulation.confidence * 100).toFixed(1)}% Confidence
+                  </div>
+                </div>
+
+                <div className="text-center">
+                  <TeamLogo team={simulation.awayTeam} />
+                  <h3 className="mt-3 font-bold text-xl text-gray-800">{simulation.awayTeam}</h3>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Match Events */}
+          <div className="bg-white rounded-2xl shadow-xl p-8 border border-sky-100">
+            <h2 className="text-2xl font-bold text-gray-800 mb-6 flex items-center space-x-2">
+              <Clock className="w-6 h-6 text-sky-500" />
+              <span>Predicted Match Events</span>
+            </h2>
+
+            <div className="space-y-6">
+              {matchEvents.map((event, index) => (
+                <div key={index} className="border border-gray-100 rounded-xl p-6 hover:shadow-md transition-shadow">
+                  <div className="flex items-start justify-between mb-4">
+                    <div className="flex items-center space-x-3">
+                      <EventIcon type={event.type} />
+                      <div>
+                        <h4 className="font-semibold text-gray-800 capitalize">
+                          {event.type === 'fouls' ? `${event.count} Fouls` : event.player || event.type}
+                        </h4>
+                        {event.minute && (
+                          <span className="text-sm text-gray-500">{event.minute}' minute</span>
+                        )}
+                      </div>
+                    </div>
+                    <ConfidenceBar confidence={event.confidence} severity={event.severity} />
+                  </div>
+                  
+                  <p className="text-gray-700 ml-8">{event.description}</p>
+                  
+                  {event.type === 'injury' && event.severity === 'high' && (
+                    <div className="ml-8 mt-3 p-3 bg-red-50 border border-red-200 rounded-lg">
+                      <p className="text-red-700 text-sm font-medium">
+                        ⚠️ Recommendation: Consider resting {event.player} to prevent injury and preserve fitness for upcoming fixtures.
+                      </p>
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+
+            {/* Summary Stats */}
+            <div className="mt-8 grid grid-cols-1 md:grid-cols-3 gap-6">
+              <div className="bg-gradient-to-r from-sky-500 to-sky-600 rounded-xl p-6 text-white">
+                <h4 className="font-semibold mb-2">Model Accuracy</h4>
+                <div className="text-3xl font-bold">{(simulation.confidence * 100).toFixed(1)}%</div>
+                <p className="text-sky-100 text-sm">Historical validation score</p>
+              </div>
+              
+              <div className="bg-gradient-to-r from-white to-sky-50 border-2 border-sky-200 rounded-xl p-6 text-sky-700">
+                <h4 className="font-semibold mb-2">Risk Factors</h4>
+                <div className="text-3xl font-bold">2</div>
+                <p className="text-sky-600 text-sm">High-risk events identified</p>
+              </div>
+              
+              <div className="bg-gradient-to-r from-sky-600 to-sky-700 rounded-xl p-6 text-white">
+                <h4 className="font-semibold mb-2">Key Insights</h4>
+                <div className="text-3xl font-bold">5</div>
+                <p className="text-sky-100 text-sm">Actionable predictions</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-sky-50 to-sky-100">
+      <div className="container mx-auto px-6 py-8">
+        {/* Header with Man City Logo */}
+        <div className="text-center mb-12">
+          <div className="flex justify-center mb-6">
+            <TeamLogo team="Man City" size="large" />
+          </div>
+          <h1 className="text-4xl font-bold text-sky-800 mb-2">Manchester City Analytics</h1>
+          <p className="text-sky-600 text-lg">Bayesian Match Simulation Platform</p>
+        </div>
+
+        {/* Match Reports Section */}
+        <div className="bg-white rounded-2xl shadow-xl p-8 border border-sky-100">
+          <div className="flex items-center justify-between mb-8">
+            <h2 className="text-2xl font-bold text-sky-800 flex items-center space-x-2">
+              <Play className="w-6 h-6 text-sky-500" />
+              <span>Match Reports</span>
+            </h2>
+            <div className="text-sm text-sky-600">
+              Last updated: {new Date().toLocaleTimeString()}
+            </div>
+          </div>
+
+          <div className="space-y-4">
+            {simulations.map((simulation) => (
+              <div
+                key={simulation.id}
+                className="group border border-sky-200 rounded-xl p-6 hover:border-sky-400 hover:shadow-lg hover:bg-sky-50 transition-all duration-200 cursor-pointer"
+                onClick={() => setSelectedSimulation(simulation.id)}
+              >
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center space-x-4">
+                    <div className="flex items-center space-x-3">
+                      <TeamLogo team={simulation.homeTeam} size="small" />
+                      <span className="font-semibold text-sky-800">{simulation.homeTeam}</span>
+                      <span className="text-sky-400">vs</span>
+                      <span className="font-semibold text-sky-800">{simulation.awayTeam}</span>
+                      <TeamLogo team={simulation.awayTeam} size="small" />
+                    </div>
+                  </div>
+                  
+                  <div className="flex items-center space-x-4">
+                    <div className="text-right">
+                      <div className="font-semibold text-sky-800">
+                        Simulation {simulation.id} - Results Ready
+                      </div>
+                      <div className="text-sm text-sky-600">{simulation.timestamp}</div>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <div className="w-3 h-3 bg-sky-500 rounded-full animate-pulse"></div>
+                      <span className="text-sky-600 font-medium">Ready</span>
+                    </div>
+                    <div className="group-hover:translate-x-1 transition-transform text-sky-500">
+                      →
+                    </div>
+                  </div>
+                </div>
+                
+                <div className="mt-4 pt-4 border-t border-sky-100">
+                  <div className="flex items-center justify-between text-sm">
+                    <span className="text-sky-700">Predicted Score: {simulation.homeScore} - {simulation.awayScore}</span>
+                    <div className="flex items-center space-x-2">
+                      <div className="w-20 bg-sky-100 rounded-full h-1">
+                        <div 
+                          className="bg-sky-500 h-1 rounded-full transition-all duration-300"
+                          style={{ width: `${simulation.confidence * 100}%` }}
+                        />
+                      </div>
+                      <span className="text-sky-700">{(simulation.confidence * 100).toFixed(0)}% confidence</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {/* Quick Stats */}
+          <div className="mt-8 pt-8 border-t border-sky-100">
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+              <div className="text-center">
+                <div className="text-2xl font-bold text-sky-600 mb-1">3</div>
+                <div className="text-sky-700 text-sm">Active Simulations</div>
+              </div>
+              <div className="text-center">
+                <div className="text-2xl font-bold text-sky-600 mb-1">87%</div>
+                <div className="text-sky-700 text-sm">Average Accuracy</div>
+              </div>
+              <div className="text-center">
+                <div className="text-2xl font-bold text-sky-600 mb-1">24</div>
+                <div className="text-sky-700 text-sm">Total Predictions</div>
+              </div>
+              <div className="text-center">
+                <div className="text-2xl font-bold text-sky-600 mb-1">15</div>
+                <div className="text-sky-700 text-sm">Risk Alerts</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default FootballDashboard;

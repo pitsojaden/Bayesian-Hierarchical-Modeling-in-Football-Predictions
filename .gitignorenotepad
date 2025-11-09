@@ -1,0 +1,1 @@
+  .gitignore```Paste this into `.gitignore`:```# Jupyter Notebook.ipynb_checkpoints/*/.ipynb_checkpoints/*# Python__pycache__/*.py[cod]*$py.class*.so.Python# Environmentsvenv/ENV/env/# Data files (if too large)*.csvdata/raw/*# Audio files (if too large - GitHub has 100MB file limit)audio/*.mp3*.wav# Video files*.mp4*.avi# OS.DS_StoreThumbs.db# Large datasetsdata/
